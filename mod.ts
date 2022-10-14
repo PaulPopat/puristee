@@ -34,10 +34,10 @@ export default function CreateServer<TState extends State>(
   ): Server<TState, TRequest, TContext> => ({
     WithMiddleware(middleware) {
       return Internal(
-        (r, s, c) => {
+        async (r, s, c) => {
           const bound_context = ApplyContext(s, c);
-          return middleware(
-            request_middleware(r, s, bound_context as any),
+          return await middleware(
+            await request_middleware(r, s, bound_context as any),
             s,
             bound_context as any
           );
@@ -72,8 +72,8 @@ export default function CreateServer<TState extends State>(
           const handler = handlers[request.method][target];
           const current_state = state_engine.GetState();
           const ctx = ApplyContext(current_state, context);
-          const { state, response } = handler(
-            request_middleware(
+          const { state, response } = await handler(
+            await request_middleware(
               await ParseRequest(request, target),
               current_state,
               ctx
@@ -82,7 +82,7 @@ export default function CreateServer<TState extends State>(
             ctx
           );
 
-          state_engine.SetState(state);
+          await state_engine.SetState(state);
 
           return Send(response);
         } catch (err) {

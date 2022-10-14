@@ -28,32 +28,32 @@ export type RequestMiddleware<
   request: TRequest,
   state: Readify<TState>,
   context: StatedContext<TState, TContext>
-) => TResponse;
+) => Promise<TResponse> | TResponse;
 
 export type StateProvider<
   TState extends State,
-  TArgs extends any[],
+  TArgs extends Array<any>,
   TReturn
-> = (state: Readify<TState>, ...args: TArgs) => TReturn;
+> = (state: Readify<TState>, ...args: TArgs) => Promise<TReturn> | TReturn;
 
 type StatedProvider<TState extends State, T> = T extends StateProvider<
   TState,
   infer A,
   infer R
 >
-  ? (...args: A) => R
+  ? (...args: A) => Promise<R> | R
   : never;
 
 export type ServerContext<TState extends State> = Record<
   string,
-  StateProvider<TState, any[], any>
+  StateProvider<TState, Array<any>, any>
 >;
 
 type ContextWith<
   TState extends State,
   TContext extends ServerContext<TState>,
   TNextKey extends string,
-  TProvider extends StateProvider<TState, any[], any>
+  TProvider extends StateProvider<TState, Array<any>, any>
 > = {
   [TKey in keyof TContext]: TContext[TKey];
 } & {
@@ -75,7 +75,9 @@ export type Handler<
   request: TRequest,
   state: Readify<TState>,
   context: StatedContext<TState, TContext>
-) => { state: Writify<TState>; response: Response };
+) =>
+  | Promise<{ state: Writify<TState>; response: Response }>
+  | { state: Writify<TState>; response: Response };
 
 export type Server<
   TState extends State,
@@ -87,7 +89,7 @@ export type Server<
   ): Server<TState, TResponse, TContext>;
 
   WithProvider<
-    TProvider extends StateProvider<TState, any[], any>,
+    TProvider extends StateProvider<TState, Array<any>, any>,
     TKey extends string
   >(
     key: TKey,

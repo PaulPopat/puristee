@@ -8,6 +8,6 @@ export default function ApplyContext<
 >(state: Readify<TState>, context: TContext): StatedContext<TState, TContext> {
   const result: any = {};
   for (const key in context)
-    result[key] = (...args: any[]) => context[key](state, ...args);
+    result[key] = (...args: Array<any>) => context[key](state, ...args);
   return result;
 }

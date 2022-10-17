@@ -1,4 +1,4 @@
-import { ReadonlyRecord } from "./types.ts";
+import { ReadonlyRecord } from "./server.ts";
 import { IsArray, IsString } from "@type_guard";
 
 /**

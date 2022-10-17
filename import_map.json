@@ -3,6 +3,6 @@
     "@testing/": "https://deno.land/std@0.159.0/testing/",
     "@path": "https://deno.land/std@0.159.0/path/mod.ts",
     "@type_guard": "https://deno.land/x/type_guard@2.3.0/index.ts",
-    "@fs_db": "https://deno.land/x/fs_db@0.0.1/mod.ts"
+    "@fs_db": "https://deno.land/x/fs_db@0.0.2/mod.ts"
   }
 }

@@ -1,5 +1,5 @@
 import { ExtractParameters, ExtractQuery } from "./path.ts";
-import { ReadonlyRecord, Request as PureRequest } from "./types.ts";
+import { ReadonlyRecord, Request as PureRequest } from "./server.ts";
 
 async function GetJson(request: Request) {
   try {

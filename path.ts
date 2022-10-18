@@ -1,5 +1,5 @@
 import { ReadonlyRecord } from "./server.ts";
-import { IsArray, IsString } from "@type_guard";
+import { IsArray, IsString } from "./deps.ts";
 
 /**
  * Checks to see if the URL part is for a parameter or not

@@ -1,4 +1,4 @@
-import { IsString } from "@type_guard";
+import { IsString } from "./deps.ts";
 import { Response as PureResponse } from "./server.ts";
 
 export default function Send(response: PureResponse): Response {

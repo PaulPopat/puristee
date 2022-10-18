@@ -74,4 +74,4 @@ export default async function CreateServer<
 }
 
 export type { Request, Response } from "./server.ts";
-export type { Readify } from "@fs_db";
+export type { Readify } from "./deps.ts";

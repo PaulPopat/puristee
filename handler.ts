@@ -2,10 +2,15 @@ import { Readify, State } from "./deps.ts";
 import { Request, ServerResponse } from "./server.ts";
 
 export default function HandlerFactory<TState extends State, TProviders>(
-  get_state: () => Readify<TState>,
-  providers: TProviders,
-  register: (handler: (request: Request) => ServerResponse<TState>) => void
+  register: (
+    handler: (
+      request: Request,
+      state: Readify<TState>,
+      providers: TProviders
+    ) => ServerResponse<TState> | Promise<ServerResponse<TState>>
+  ) => void
 ) {
+  type HandlerArgs = [Request, Readify<TState>, TProviders];
   type ContextResponse<TContext extends Record<never, never>> = {
     continue: true;
     context: TContext;
@@ -19,7 +24,9 @@ export default function HandlerFactory<TState extends State, TProviders>(
   ): arg is ContextResponse<TContext> => "continue" in arg;
 
   const Internal = <TResponse extends Record<never, never>>(
-    outer_handler: (request: Request) => FullResponse<TResponse>
+    outer_handler: (
+      ...args: HandlerArgs
+    ) => FullResponse<TResponse> | Promise<FullResponse<TResponse>>
   ) => {
     return {
       With<TResult extends Record<never, never>>(
@@ -28,14 +35,14 @@ export default function HandlerFactory<TState extends State, TProviders>(
           state: Readify<TState>,
           providers: TProviders,
           context: TResponse
-        ) => FullResponse<TResult>
+        ) => FullResponse<TResult> | Promise<FullResponse<TResult>>
       ) {
-        return Internal((request) => {
-          const outer = outer_handler(request);
+        return Internal(async (request, state, providers) => {
+          const outer = await outer_handler(request, state, providers);
           if (IsContextResponse(outer)) {
-            const response = handler(
+            const response = await handler(
               request,
-              get_state(),
+              state,
               providers,
               outer.context
             );
@@ -57,12 +64,12 @@ export default function HandlerFactory<TState extends State, TProviders>(
           state: Readify<TState>,
           providers: TProviders,
           context: TResponse
-        ) => ServerResponse<TState>
+        ) => ServerResponse<TState> | Promise<ServerResponse<TState>>
       ) {
-        register((request: Request) => {
-          const outer = outer_handler(request);
+        register(async (request, state, providers) => {
+          const outer = await outer_handler(request, state, providers);
           if (IsContextResponse(outer)) {
-            return final(request, get_state(), providers, outer.context);
+            return await final(request, state, providers, outer.context);
           }
 
           return outer;

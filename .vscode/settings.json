@@ -1,7 +1,6 @@
 {
   "deno.enable": true,
   "deno.unstable": true,
-  "deno.importMap": "./import_map.json",
   "files.exclude": {
     "**/.git": true,
     "**/.svn": true,

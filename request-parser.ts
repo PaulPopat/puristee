@@ -1,7 +1,14 @@
 import { ExtractParameters, ExtractQuery } from "./path.ts";
 import { ReadonlyRecord, Request as PureRequest } from "./server.ts";
 
-async function GetJson(request: Request) {
+type BaseRequest = {
+  json(): Promise<unknown>;
+  url: string;
+  method: string;
+  headers: Iterable<[string, string]>;
+};
+
+async function GetJson(request: BaseRequest) {
   try {
     return await request.json();
   } catch {
@@ -10,13 +17,14 @@ async function GetJson(request: Request) {
 }
 
 export default async function ParseRequest(
-  request: Request,
+  request: BaseRequest,
   path: string
 ): Promise<PureRequest> {
   const body = await GetJson(request);
+  const url = new URL(request.url);
   return {
     get url() {
-      return request.url;
+      return url.pathname;
     },
     get method() {
       return request.method;
@@ -34,7 +42,7 @@ export default async function ParseRequest(
     },
     get parameters() {
       return {
-        ...ExtractParameters(request.url, path),
+        ...ExtractParameters(url.pathname, path),
         ...ExtractQuery(request.url),
       };
     },

@@ -1,4 +1,4 @@
-import { State, Writify } from "./deps.ts";
+import { State } from "./deps.ts";
 
 export type ReadonlyRecord<TKey extends string | number | symbol, TData> = {
   readonly [TK in TKey]: TData;
@@ -19,6 +19,6 @@ export type Response = {
 };
 
 export type ServerResponse<TState extends State> = {
-  state: Writify<TState>;
+  state?: Partial<TState>;
   response: Response;
 };

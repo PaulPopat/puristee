@@ -100,11 +100,34 @@ export default function CreateServer<
           {
             url: request.url,
             method: request.method,
-            headers: (function* () {
-              for (const key in request.headers)
-                yield [key, request.headers[key]];
-            })(),
+            headers: Object.assign(
+              (function* () {
+                for (const key in request.headers)
+                  yield [key, request.headers[key]] as [string, string];
+              })(),
+              { get: (key: string) => request.headers[key] }
+            ),
             json() {
+              return Promise.resolve(request.body);
+            },
+            text() {
+              if (typeof request.body !== "string")
+                throw new Error("Invalid body type");
+              return Promise.resolve(request.body);
+            },
+            formData() {
+              if (!(request.body instanceof FormData))
+                throw new Error("Invalid body type");
+              return Promise.resolve(request.body);
+            },
+            blob() {
+              if (!(request.body instanceof Blob))
+                throw new Error("Invalid body type");
+              return Promise.resolve(request.body);
+            },
+            arrayBuffer() {
+              if (!(request.body instanceof ArrayBuffer))
+                throw new Error("Invalid body type");
               return Promise.resolve(request.body);
             },
           },

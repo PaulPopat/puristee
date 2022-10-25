@@ -1,12 +1,11 @@
 // deno-lint-ignore-file no-explicit-any
-import { CreateState, DeepMerge, Readify, State } from "./deps.ts";
+import { CreateState, DeepMerge, Readify, State, Mock } from "./deps.ts";
 import { GetBestMatch } from "./path.ts";
 import ParseRequest from "./request-parser.ts";
 import Send from "./response-applier.ts";
 import { Request as PureRequest, ServerResponse } from "./server.ts";
 import { Map } from "./object.ts";
 import HandlerFactory from "./handler.ts";
-import Mock from "../fs-db/mock-directory.ts";
 
 export type TestRequest = {
   url: string;
@@ -48,7 +47,7 @@ export default function CreateServer<
       });
     },
     async Listen(port: number) {
-      const state_manager = await CreateState(state_dir, init);
+      const state_manager = await CreateState<TState>(state_dir, init);
       async function Run(request: Request) {
         try {
           const options = Object.keys(handlers[request.method]);
@@ -57,10 +56,11 @@ export default function CreateServer<
           if (!target) return new Response("", { status: 404 });
 
           const handler = handlers[request.method][target];
+          const current_state = state_manager.GetState();
           const { state, response } = await handler(
             await ParseRequest(request, target),
-            state_manager.GetState(),
-            bind_providers(state_manager.GetState())
+            current_state,
+            bind_providers(current_state)
           );
 
           if (state) await state_manager.SetState(state);

@@ -1,4 +1,5 @@
 import { IsString } from "./deps.ts";
+import { RenderToString } from "./jsx.ts";
 import { Response as PureResponse } from "./server.ts";
 
 const AcceptedTypes = [
@@ -10,6 +11,15 @@ const AcceptedTypes = [
 ];
 
 export default function Send(response: PureResponse): Response {
+  if ("jsx" in response)
+    return new Response("<!DOCTYPE html>\n" + RenderToString(response.jsx), {
+      status: response.status,
+      headers: {
+        ...response.headers,
+        "Content-Type": "text/html",
+      },
+    });
+
   const original_body = response.body;
   for (const type of AcceptedTypes)
     if (original_body instanceof type)
@@ -18,12 +28,17 @@ export default function Send(response: PureResponse): Response {
         headers: response.headers,
       });
 
-  const body = IsString(original_body)
-    ? original_body
-    : JSON.stringify(original_body);
+  if (IsString(original_body))
+    return new Response(original_body, {
+      status: response.status,
+      headers: response.headers,
+    });
 
-  return new Response(body, {
+  return new Response(JSON.stringify(original_body), {
     status: response.status,
-    headers: response.headers,
+    headers: {
+      ...response.headers,
+      "Content-Type": "application/json",
+    },
   });
 }

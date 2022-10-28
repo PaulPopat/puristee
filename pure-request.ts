@@ -18,7 +18,7 @@ export default class PureRequest {
   private constructor(
     private readonly request: Request,
     private readonly pattern: Pattern,
-    private readonly body: unknown
+    private readonly body_data: unknown
   ) {
     this.url_object = new URL(request.url);
   }
@@ -45,6 +45,10 @@ export default class PureRequest {
 
   public get parameters() {
     return this.pattern.Parameters(this.url_object);
+  }
+
+  public get body() {
+    return this.body_data;
   }
 
   public static async Init(request: Request, pattern: Pattern) {

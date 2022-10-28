@@ -10,15 +10,18 @@ const AcceptedTypes = [
   ReadableStream<Uint8Array>,
 ];
 
-export default function Send(response: PureResponse): Response {
+export default async function Send(response: PureResponse) {
   if ("jsx" in response)
-    return new Response("<!DOCTYPE html>\n" + RenderToString(response.jsx), {
-      status: response.status,
-      headers: {
-        ...response.headers,
-        "Content-Type": "text/html",
-      },
-    });
+    return new Response(
+      "<!DOCTYPE html>\n" + (await RenderToString(response.jsx)),
+      {
+        status: response.status,
+        headers: {
+          ...response.headers,
+          "Content-Type": "text/html",
+        },
+      }
+    );
 
   const original_body = response.body;
   for (const type of AcceptedTypes)

@@ -83,11 +83,12 @@ export default function CreateServer<
           );
           if (state) await state_manager.SetState(state);
 
-          event.respondWith(Send(response));
+          event.respondWith(await Send(response));
         }
       }
 
       const server = Deno.listen({ port });
+      console.log(`Server listening on ${port}`);
       for await (const conn of server) {
         serve_http(conn);
       }

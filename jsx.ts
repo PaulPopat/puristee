@@ -6,7 +6,7 @@ declare global {
       [elemName: string]: unknown;
     }
     interface ElementChildrenAttribute {
-      children: {};
+      children: Record<never, never>;
     }
   }
 }

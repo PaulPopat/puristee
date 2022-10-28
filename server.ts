@@ -1,4 +1,4 @@
-import { State } from "./deps.ts";
+import { DeepPartial, State } from "./deps.ts";
 
 export type ReadonlyRecord<TKey extends string | number | symbol, TData> = {
   readonly [TK in TKey]: TData;
@@ -19,6 +19,6 @@ export type Response = {
 };
 
 export type ServerResponse<TState extends State> = {
-  state?: Partial<TState>;
+  state?: DeepPartial<TState>;
   response: Response;
 };

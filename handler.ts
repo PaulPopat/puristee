@@ -1,16 +1,12 @@
 import { Readify, State } from "./deps.ts";
-import { Request, ServerResponse } from "./server.ts";
+import { Handler } from "./handler-store.ts";
+import PureRequest from "./pure-request.ts";
+import { ServerResponse } from "./server.ts";
 
 export default function HandlerFactory<TState extends State, TProviders>(
-  register: (
-    handler: (
-      request: Request,
-      state: Readify<TState>,
-      providers: TProviders
-    ) => ServerResponse<TState> | Promise<ServerResponse<TState>>
-  ) => void
+  register: (handler: Handler<TState, TProviders>) => void
 ) {
-  type HandlerArgs = [Request, Readify<TState>, TProviders];
+  type HandlerArgs = Parameters<Handler<TState, TProviders>>;
   type ContextResponse<TContext extends Record<never, never>> = {
     continue: true;
     context: TContext;
@@ -31,7 +27,7 @@ export default function HandlerFactory<TState extends State, TProviders>(
     return {
       With<TResult extends Record<never, never>>(
         handler: (
-          request: Request,
+          request: PureRequest,
           state: Readify<TState>,
           providers: TProviders,
           context: TResponse
@@ -60,7 +56,7 @@ export default function HandlerFactory<TState extends State, TProviders>(
       },
       Register(
         final: (
-          request: Request,
+          request: PureRequest,
           state: Readify<TState>,
           providers: TProviders,
           context: TResponse

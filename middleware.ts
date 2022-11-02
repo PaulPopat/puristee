@@ -55,6 +55,8 @@ export function RequireParameters<
 
 async function SendFile(path: string, mime?: string): Promise<Response> {
   try {
+    const stat = await Deno.stat(path);
+    if (stat.isDirectory) return { status: 404 };
     const file = await Deno.open(path, { read: true });
     return {
       status: 200,

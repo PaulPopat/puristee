@@ -56,7 +56,11 @@ export default class Pattern {
 
   public IsMatch(url: URL) {
     const url_parts = url.pathname.split("/").filter((p) => p);
-    if (this.parts.length !== url_parts.length && !this.IsSlug) return false;
+    if (
+      (this.IsSlug && this.parts.length > url_parts.length) ||
+      (!this.IsSlug && this.parts.length !== url_parts.length)
+    )
+      return false;
 
     for (const [part, url_part] of this.JoinedParts(url_parts))
       if (!part.IsMatch(url_part)) return false;

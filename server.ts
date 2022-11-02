@@ -1,52 +1,21 @@
-// deno-lint-ignore-file no-explicit-any
-import * as Jsx from "./jsx.ts";
-import {
-  CreateState,
-  DeepMerge,
-  Readify,
-  State,
-  Mock,
-  DeepPartial,
-} from "./deps.ts";
+import { CreateState, DeepMerge, Readify, State, Mock } from "./deps.ts";
 import Send from "./response-applier.ts";
-import { Map } from "./object.ts";
 import HandlerFactory from "./handler.ts";
 import { HandlerStore } from "./handler-store.ts";
 import Pattern from "./pattern.ts";
 import PureRequest from "./pure-request.ts";
 import TestRequest, { TestRequestInit } from "./test-request.ts";
-
-export type ReadonlyRecord<TKey extends string | number | symbol, TData> = {
-  readonly [TK in TKey]: TData;
-};
-
-export type Response = {
-  readonly status: number;
-  readonly headers?: ReadonlyRecord<string, string>;
-} & ({ readonly body?: unknown } | { readonly jsx: Jsx.Node });
-
-export type ServerResponse<TState extends State> = {
-  state?: DeepPartial<TState>;
-  response: Response;
-};
+import Provider from "./providers.ts";
 
 export default function CreateServer<
   TState extends State,
-  TProviders extends Record<
-    string,
-    (this: Readify<TState>, ...args: any[]) => any
-  >
->(state_dir: string, init: TState, providers: TProviders) {
-  type BoundProviders = {
-    [TKey in keyof TProviders]: (
-      ...params: Parameters<TProviders[TKey]>
-    ) => ReturnType<TProviders[TKey]>;
-  };
-
-  const store = new HandlerStore<TState, BoundProviders>();
-
-  const bind_providers = (state: Readify<TState>): BoundProviders =>
-    Map(providers, (_, value) => value.bind(state) as any);
+  TProviders extends Provider<TState>
+>(
+  state_dir: string,
+  init: TState,
+  provider: new (state: Readify<TState>) => TProviders
+) {
+  const store = new HandlerStore<TState, TProviders>();
 
   async function Run(request: Request, current_state: Readify<TState>) {
     try {
@@ -55,11 +24,16 @@ export default function CreateServer<
       if (!target) return { response: { status: 404 } };
 
       const [_, pattern, handler] = target;
-      return await handler(
+      const result = await handler(
         await PureRequest.Init(request, pattern),
         current_state,
-        bind_providers(current_state)
+        new provider(current_state)
       );
+
+      if ("response" in result)
+        return { response: result.response, state: result.state };
+
+      return { response: result, state: undefined };
     } catch (err) {
       console.error(err);
       return { response: { status: 500 } };
@@ -68,7 +42,7 @@ export default function CreateServer<
 
   return {
     CreateHandler(pattern: string, method: string) {
-      return HandlerFactory<TState, BoundProviders>((handler) =>
+      return HandlerFactory<TState, TProviders>((handler) =>
         store.Add(method, new Pattern(pattern), handler)
       );
     },

@@ -1,6 +1,7 @@
 import Pattern from "./pattern.ts";
-import { ReadonlyRecord } from "./server.ts";
+import { ReadonlyRecord } from "./util-types.ts";
 import { ParseMimeType } from "./mime-type.ts";
+import Cookies from "./cookies.ts";
 
 async function GetJson(request: Request) {
   try {
@@ -49,6 +50,10 @@ export default class PureRequest {
 
   public get body() {
     return this.body_data;
+  }
+
+  public get cookies() {
+    return Cookies(this.request);
   }
 
   public static async Init(request: Request, pattern: Pattern) {

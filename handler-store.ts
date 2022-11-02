@@ -1,13 +1,6 @@
-import { Readify, State } from "./deps.ts";
-import { ServerResponse } from "./server.ts";
+import { State } from "./deps.ts";
+import { Handler } from "./handler.ts";
 import Pattern from "./pattern.ts";
-import PureRequest from "./pure-request.ts";
-
-export type Handler<TState extends State, TProviders> = (
-  request: PureRequest,
-  state: Readify<TState>,
-  providers: TProviders
-) => ServerResponse<TState> | Promise<ServerResponse<TState>>;
 
 export class HandlerStore<TState extends State, TProviders> {
   private data: Array<[string, Pattern, Handler<TState, TProviders>]> = [];

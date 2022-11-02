@@ -23,7 +23,7 @@ class Part {
 export default class Pattern {
   private readonly parts: Array<Part>;
 
-  public constructor(private readonly raw: string) {
+  public constructor(raw: string) {
     this.parts = raw
       .split("/")
       .filter((p) => p)
@@ -34,11 +34,12 @@ export default class Pattern {
   }
 
   private get LastPart() {
+    if (this.parts.length === 0) return undefined;
     return this.parts[this.parts.length - 1];
   }
 
   private get IsSlug() {
-    return this.LastPart.IsSlug;
+    return this.LastPart?.IsSlug ?? false;
   }
 
   public get Score() {

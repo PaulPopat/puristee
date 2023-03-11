@@ -1,4 +1,11 @@
-import { CreateState, DeepMerge, Readify, State, Mock } from "./deps.ts";
+import {
+  DeepMerge,
+  Directory,
+  MockedDirectory,
+  Schema,
+  StateReader,
+  StateWriter,
+} from "./deps.ts";
 import Send from "./response-applier.ts";
 import HandlerFactory from "./handler.ts";
 import { HandlerStore } from "./handler-store.ts";
@@ -8,16 +15,16 @@ import TestRequest, { TestRequestInit } from "./test-request.ts";
 import Provider from "./providers.ts";
 
 export default function CreateServer<
-  TState extends State,
-  TProviders extends Provider<TState>
+  TSchema extends Schema,
+  TProviders extends Provider<TSchema>
 >(
   state_dir: string,
-  init: TState,
-  provider: new (state: Readify<TState>) => TProviders
+  schema: TSchema,
+  provider: new (state: StateReader<TSchema>) => TProviders
 ) {
-  const store = new HandlerStore<TState, TProviders>();
+  const store = new HandlerStore<TSchema, TProviders>();
 
-  async function Run(request: Request, current_state: Readify<TState>) {
+  async function Run(request: Request, current_state: StateReader<TSchema>) {
     try {
       const url = new URL(request.url);
       const target = store.Get(url, request.method);
@@ -42,20 +49,20 @@ export default function CreateServer<
 
   return {
     CreateHandler(pattern: string, method: string) {
-      return HandlerFactory<TState, TProviders>((handler) =>
+      return HandlerFactory<TSchema, TProviders>((handler) =>
         store.Add(method, new Pattern(pattern), handler)
       );
     },
     async Listen(port: number) {
-      const state_manager = await CreateState<TState>(state_dir, init);
+      const state_manager = new Directory(schema, state_dir);
       async function serve_http(conn: Deno.Conn) {
         const connection = Deno.serveHttp(conn);
         for await (const event of connection) {
           const { response, state } = await Run(
             event.request,
-            state_manager.GetState()
+            state_manager.Model
           );
-          if (state) await state_manager.SetState(state);
+          if (state) state_manager.Write(state);
 
           event.respondWith(await Send(response));
         }
@@ -67,9 +74,10 @@ export default function CreateServer<
         serve_http(conn);
       }
     },
-    async Test(request: TestRequestInit, input_state: TState) {
-      const mocked_data = Mock(input_state);
-      const result = await Run(new TestRequest(request), mocked_data);
+    async Test(request: TestRequestInit, input_state: StateWriter<TSchema>) {
+      const mocked_data = new MockedDirectory<TSchema>();
+      mocked_data.Write(input_state);
+      const result = await Run(new TestRequest(request), mocked_data.Model);
       return {
         response: result.response,
         state: result.state,

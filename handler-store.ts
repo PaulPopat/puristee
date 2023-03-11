@@ -1,8 +1,8 @@
-import { State } from "./deps.ts";
+import { Schema } from "./deps.ts";
 import { Handler } from "./handler.ts";
 import Pattern from "./pattern.ts";
 
-export class HandlerStore<TState extends State, TProviders> {
+export class HandlerStore<TState extends Schema, TProviders> {
   private data: Array<[string, Pattern, Handler<TState, TProviders>]> = [];
 
   public Add(

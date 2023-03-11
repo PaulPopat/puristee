@@ -1,7 +1,7 @@
-import { State, Readify } from "./deps.ts";
+import { Schema, StateReader } from "./deps.ts";
 
-export default class Provider<TState extends State> {
-  public constructor(private readonly state: Readify<TState>) {}
+export default class Provider<TState extends Schema> {
+  public constructor(private readonly state: StateReader<TState>) {}
 
   protected get State() {
     return this.state;

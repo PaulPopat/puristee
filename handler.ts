@@ -1,4 +1,4 @@
-import { DeepPartial, Readify, State } from "./deps.ts";
+import { Schema, StateReader, StateWriter } from "./deps.ts";
 import PureRequest from "./pure-request.ts";
 import { ReadonlyRecord } from "./util-types.ts";
 import * as Jsx from "./jsx.ts";
@@ -10,16 +10,16 @@ export type Response = {
   readonly cookies?: Record<string, SetCookie>;
 } & ({ readonly body?: unknown } | { readonly jsx: Jsx.Node });
 
-export type ServerResponse<TState extends State> =
+export type ServerResponse<TState extends Schema> =
   | {
-      state?: DeepPartial<TState>;
+      state?: StateWriter<TState>;
       response: Response;
     }
   | Response;
 
-export type Handler<TState extends State, TProviders> = (
+export type Handler<TState extends Schema, TProviders> = (
   request: PureRequest,
-  state: Readify<TState>,
+  state: StateReader<TState>,
   providers: TProviders
 ) => ServerResponse<TState> | Promise<ServerResponse<TState>>;
 
@@ -29,23 +29,23 @@ type ContextResponse<TContext extends Record<never, never>> = {
 };
 
 type FullResponse<
-  TState extends State,
+  TState extends Schema,
   TContext extends Record<never, never>
 > = ServerResponse<TState> | ContextResponse<TContext>;
 
 export type Middleware<
-  TState extends State,
+  TState extends Schema,
   TProviders,
   TContext extends Record<never, never>,
   TResponse extends Record<never, never>
 > = (
   request: PureRequest,
-  state: Readify<TState>,
+  state: StateReader<TState>,
   providers: TProviders,
   context: TContext
 ) => FullResponse<TState, TResponse> | Promise<FullResponse<TState, TResponse>>;
 
-export default function HandlerFactory<TState extends State, TProviders>(
+export default function HandlerFactory<TState extends Schema, TProviders>(
   register: (handler: Handler<TState, TProviders>) => void
 ) {
   const IsContextResponse = <TContext extends Record<never, never>>(
@@ -88,7 +88,7 @@ export default function HandlerFactory<TState extends State, TProviders>(
       Register(
         final: (
           request: PureRequest,
-          state: Readify<TState>,
+          state: StateReader<TState>,
           providers: TProviders,
           context: TResponse
         ) => ServerResponse<TState> | Promise<ServerResponse<TState>>

@@ -16,6 +16,6 @@ export class HandlerStore<TState extends Schema, TProviders> {
   public Get(url: URL, method: string) {
     return this.data
       .filter(([m, p]) => m === method && p.IsMatch(url))
-      .sort(([_1, p1], [_2, p2]) => p1.Score - p2.Score)[0];
+      .sort(([_1, p1], [_2, p2]) => p2.Score - p1.Score)[0];
   }
 }

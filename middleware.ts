@@ -66,20 +66,21 @@ async function SendFile(path: string, mime?: string): Promise<Response> {
       body: file.readable,
     };
   } catch (err) {
+    console.error(err);
     if (err instanceof Deno.errors.NotFound) return { status: 404 };
     throw err;
   }
 }
 
 export function ServeFile(path: string, mime?: string) {
-  return () => SendFile(path, mime);
+  return () => SendFile(Path.resolve(path), mime);
 }
 
 export function ServeDirectory(base: string) {
   return (request: PureRequest) => {
     const slug = request.parameters.slug;
     if (!slug) return SendFile(base);
-    if (typeof slug === "string") return SendFile(Path.join(base, slug));
-    return SendFile(Path.join(base, ...slug));
+    if (typeof slug === "string") return SendFile(Path.resolve(base, slug));
+    return SendFile(Path.resolve(base, ...slug));
   };
 }

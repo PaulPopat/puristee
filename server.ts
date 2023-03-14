@@ -28,8 +28,12 @@ export default function CreateServer<
     try {
       const url = new URL(request.url);
       const target = store.Get(url, request.method);
-      if (!target) return { response: { status: 404 } };
+      if (!target) {
+        console.log(`No handler found for ${request.url}`);
+        return { response: { status: 404 } };
+      }
 
+      console.log(`Handling request for ${request.url}`);
       const [_, pattern, handler] = target;
       const result = await handler(
         await PureRequest.Init(request, pattern),

@@ -1,7 +1,7 @@
 import * as Jsx from "./jsx.ts";
 
 export { default } from "./server.ts";
-export type { Response, Middleware } from "./handler.ts";
+export type { PureResponse, Middleware } from "./handler.ts";
 export {
   RequireBody,
   RequireParameters,

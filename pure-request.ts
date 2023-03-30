@@ -61,4 +61,12 @@ export default class PureRequest {
 
     return new PureRequest(request, pattern, body);
   }
+
+  public get IsUpgradable() {
+    return this.request.headers.get("upgrade") === "websocket";
+  }
+
+  public Upgrade() {
+    return Deno.upgradeWebSocket(this.request);
+  }
 }

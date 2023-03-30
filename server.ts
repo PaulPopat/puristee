@@ -7,7 +7,7 @@ import {
   StateWriter,
 } from "./deps.ts";
 import Send from "./response-applier.ts";
-import HandlerFactory from "./handler.ts";
+import HandlerFactory, { Middleware } from "./handler.ts";
 import { HandlerStore } from "./handler-store.ts";
 import Pattern from "./pattern.ts";
 import PureRequest from "./pure-request.ts";
@@ -20,7 +20,7 @@ export default function CreateServer<
 >(
   state_dir: string,
   schema: TSchema,
-  provider: new (state: StateReader<TSchema>) => TProviders
+  provider?: new (state: StateReader<TSchema>) => TProviders
 ) {
   const store = new HandlerStore<TSchema, TProviders>();
 
@@ -38,7 +38,7 @@ export default function CreateServer<
       const result = await handler(
         await PureRequest.Init(request, pattern),
         current_state,
-        new provider(current_state)
+        provider ? new provider(current_state) : undefined
       );
 
       if ("response" in result)
@@ -87,6 +87,12 @@ export default function CreateServer<
         state: result.state,
         full_state: DeepMerge(input_state, result.state ?? {}),
       };
+    },
+    CreateMiddleware<
+      TContext extends Record<never, never>,
+      TResponse extends Record<never, never>
+    >(handler: Middleware<TSchema, TProviders, TContext, TResponse>) {
+      return handler;
     },
   };
 }

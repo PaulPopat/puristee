@@ -4,23 +4,25 @@ import { ReadonlyRecord } from "./util-types.ts";
 import * as Jsx from "./jsx.ts";
 import { SetCookie } from "./set-cookies.ts";
 
-export type Response = {
-  readonly status: number;
-  readonly headers?: ReadonlyRecord<string, string>;
-  readonly cookies?: Record<string, SetCookie>;
-} & ({ readonly body?: unknown } | { readonly jsx: Jsx.Node });
+export type PureResponse =
+  | ({
+      readonly status: number;
+      readonly headers?: ReadonlyRecord<string, string>;
+      readonly cookies?: Record<string, SetCookie>;
+    } & ({ readonly body?: unknown } | { readonly jsx: Jsx.Node }))
+  | Response;
 
 export type ServerResponse<TState extends Schema> =
   | {
       state?: StateWriter<TState>;
-      response: Response;
+      response: PureResponse;
     }
-  | Response;
+  | PureResponse;
 
 export type Handler<TState extends Schema, TProviders> = (
   request: PureRequest,
   state: StateReader<TState>,
-  providers: TProviders
+  providers?: TProviders
 ) => ServerResponse<TState> | Promise<ServerResponse<TState>>;
 
 type ContextResponse<TContext extends Record<never, never>> = {
@@ -41,7 +43,7 @@ export type Middleware<
 > = (
   request: PureRequest,
   state: StateReader<TState>,
-  providers: TProviders,
+  providers: TProviders | undefined,
   context: TContext
 ) => FullResponse<TState, TResponse> | Promise<FullResponse<TState, TResponse>>;
 
@@ -89,7 +91,7 @@ export default function HandlerFactory<TState extends Schema, TProviders>(
         final: (
           request: PureRequest,
           state: StateReader<TState>,
-          providers: TProviders,
+          providers: TProviders | undefined,
           context: TResponse
         ) => ServerResponse<TState> | Promise<ServerResponse<TState>>
       ) {

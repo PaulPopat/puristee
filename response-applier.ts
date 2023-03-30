@@ -1,6 +1,6 @@
 import { IsString } from "./deps.ts";
 import { RenderToString } from "./jsx.ts";
-import { Response as PureResponse } from "./handler.ts";
+import { PureResponse } from "./handler.ts";
 import SetCookies from "./set-cookies.ts";
 
 const AcceptedTypes = [
@@ -11,7 +11,8 @@ const AcceptedTypes = [
   ReadableStream<Uint8Array>,
 ];
 
-export default async function Send(response: PureResponse) {
+export default async function Send(response: PureResponse | Response) {
+  if (response instanceof Response) return response;
   const headers = new Headers(response.headers);
 
   if (response.cookies)

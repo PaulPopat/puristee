@@ -1,10 +1,10 @@
 import { Checker, MediaType, Path } from "./deps.ts";
 import PureRequest from "./pure-request.ts";
-import { Response } from "./handler.ts";
+import { PureResponse } from "./handler.ts";
 
 const basic_error_response = { status: 400, headers: {}, body: "" };
 
-type ResponseFactory = (data: unknown, request: PureRequest) => Response;
+type ResponseFactory = (data: unknown, request: PureRequest) => PureResponse;
 
 export function RequireBody<T>(
   checker: Checker<T>,
@@ -26,7 +26,9 @@ export function RequireBody<T>(
   };
 }
 
-function IsDictionaryMatch<T extends Record<string, string | null | undefined>>(
+function IsDictionaryMatch<
+  T extends Record<string, string | Array<string> | null | undefined>
+>(
   checker: { [TKey in keyof T]: Checker<T[TKey]> },
   // deno-lint-ignore no-explicit-any
   subject: any
@@ -38,7 +40,7 @@ function IsDictionaryMatch<T extends Record<string, string | null | undefined>>(
 }
 
 export function RequireParameters<
-  T extends Record<string, string | null | undefined>
+  T extends Record<string, string | Array<string> | null | undefined>
 >(
   checker: { [TKey in keyof T]: Checker<T[TKey]> },
   error_response?: ResponseFactory
@@ -53,7 +55,19 @@ export function RequireParameters<
   };
 }
 
-async function SendFile(path: string, mime?: string): Promise<Response> {
+const extension_map: Record<string, string> = {
+  svg: "image/svg",
+};
+
+function GetMime(path: string) {
+  const extension = path.split(".").findLast(() => true);
+
+  // if (!extension || !extension_map[extension])
+  return MediaType.contentType(extension ?? "");
+  // return extension_map[extension];
+}
+
+async function SendFile(path: string, mime?: string): Promise<PureResponse> {
   try {
     const stat = await Deno.stat(path);
     if (stat.isDirectory) return { status: 404 };
@@ -61,7 +75,7 @@ async function SendFile(path: string, mime?: string): Promise<Response> {
     return {
       status: 200,
       headers: {
-        "Content-Type": mime ?? MediaType.contentType(path)?.toString() ?? "",
+        "Content-Type": mime ?? GetMime(path) ?? "",
       },
       body: file.readable,
     };
